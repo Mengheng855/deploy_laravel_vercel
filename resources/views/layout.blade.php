@@ -80,6 +80,15 @@
             </div>
         @endif
 
+        @if (session('error'))
+            <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-100 text-rose-700 flex items-center gap-3 shadow-sm animate-fade-in">
+                <div class="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-600">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                </div>
+                <div class="font-medium">{{ session('error') }}</div>
+            </div>
+        @endif
+
         @yield('content')
     </main>
     
