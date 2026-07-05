@@ -35,6 +35,9 @@ class ProductController extends Controller
             try {
                 if (env('SUPABASE_ACCESS_KEY_ID')) {
                     $path = $request->file('image')->store('products', 'supabase');
+                    if ($path === false) {
+                        throw new \Exception("Failed to upload image to Supabase. Check your credentials and ensure your project is active.");
+                    }
                     $data['image'] = \Illuminate\Support\Facades\Storage::disk('supabase')->url($path);
                 } else {
                     $image = $request->file('image');
@@ -88,6 +91,9 @@ class ProductController extends Controller
                 
                 if (env('SUPABASE_ACCESS_KEY_ID')) {
                     $path = $request->file('image')->store('products', 'supabase');
+                    if ($path === false) {
+                        throw new \Exception("Failed to upload image to Supabase. Check your credentials and ensure your project is active.");
+                    }
                     $data['image'] = \Illuminate\Support\Facades\Storage::disk('supabase')->url($path);
                 } else {
                     $image = $request->file('image');
