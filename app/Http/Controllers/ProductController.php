@@ -32,22 +32,10 @@ class ProductController extends Controller
         $data = $request->all();
 
         if ($request->hasFile('image')) {
-            try {
-                if (env('SUPABASE_ACCESS_KEY_ID')) {
-                    $path = $request->file('image')->store('products', 'supabase');
-                    if ($path === false) {
-                        throw new \Exception("Failed to upload image to Supabase. Check your credentials and ensure your project is active.");
-                    }
-                    $data['image'] = \Illuminate\Support\Facades\Storage::disk('supabase')->url($path);
-                } else {
-                    $image = $request->file('image');
-                    $imageName = time() . '_' . $image->getClientOriginalName();
-                    $image->move(public_path('uploads'), $imageName);
-                    $data['image'] = 'uploads/' . $imageName;
-                }
-            } catch (\Throwable $e) {
-                return redirect()->back()->withInput()->with('error', 'Image upload failed: ' . $e->getMessage() . '. On Vercel, you must set Supabase Storage env variables.');
-            }
+            $image = $request->file('image');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+            $image->move(public_path('uploads'), $imageName);
+            $data['image'] = 'uploads/' . $imageName;
         }
 
         Product::create($data);
@@ -78,32 +66,13 @@ class ProductController extends Controller
         $data = $request->all();
 
         if ($request->hasFile('image')) {
-            try {
-                if ($product->image) {
-                    if (str_starts_with($product->image, 'http')) {
-                        // Assuming the filename is the last part of the URL for Supabase
-                        $filename = basename(parse_url($product->image, PHP_URL_PATH));
-                        \Illuminate\Support\Facades\Storage::disk('supabase')->delete('products/' . $filename);
-                    } elseif (file_exists(public_path($product->image))) {
-                        @unlink(public_path($product->image));
-                    }
-                }
-                
-                if (env('SUPABASE_ACCESS_KEY_ID')) {
-                    $path = $request->file('image')->store('products', 'supabase');
-                    if ($path === false) {
-                        throw new \Exception("Failed to upload image to Supabase. Check your credentials and ensure your project is active.");
-                    }
-                    $data['image'] = \Illuminate\Support\Facades\Storage::disk('supabase')->url($path);
-                } else {
-                    $image = $request->file('image');
-                    $imageName = time() . '_' . $image->getClientOriginalName();
-                    $image->move(public_path('uploads'), $imageName);
-                    $data['image'] = 'uploads/' . $imageName;
-                }
-            } catch (\Throwable $e) {
-                return redirect()->back()->withInput()->with('error', 'Image update failed: ' . $e->getMessage());
+            if ($product->image && file_exists(public_path($product->image))) {
+                @unlink(public_path($product->image));
             }
+            $image = $request->file('image');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+            $image->move(public_path('uploads'), $imageName);
+            $data['image'] = 'uploads/' . $imageName;
         }
 
         $product->update($data);
@@ -113,13 +82,8 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        if ($product->image) {
-            if (str_starts_with($product->image, 'http') && env('SUPABASE_ACCESS_KEY_ID')) {
-                $filename = basename(parse_url($product->image, PHP_URL_PATH));
-                \Illuminate\Support\Facades\Storage::disk('supabase')->delete('products/' . $filename);
-            } elseif (file_exists(public_path($product->image))) {
-                @unlink(public_path($product->image));
-            }
+        if ($product->image && file_exists(public_path($product->image))) {
+            @unlink(public_path($product->image));
         }
         $product->delete();
 
